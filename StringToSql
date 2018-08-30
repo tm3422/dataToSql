@@ -1,0 +1,112 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class StringToSql {
+
+    private static String tableName = "test";
+    private static List<String> typeList = new ArrayList<>();
+
+    private static String getType(String data) {
+        if (data == null) {
+            return "varchar(2)";
+        }
+        try {
+            Integer.parseInt(data);
+            return "int";
+        } catch (Exception e) {
+            return "varchar(64)";
+        }
+    }
+
+    private static String generalDDL(String title, String data) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("create table ")
+                .append(tableName)
+                .append("(");
+        String[] ts = title.split("\\|");
+        String[] ds = data.split("\\|");
+        typeList.add("");
+        for (int i = 1; i < ts.length; i++) {
+            typeList.add(getType(ds[i].trim()));
+            builder.append(ts[i].trim())
+                    .append("\t")
+                    .append(typeList.get(i))
+                    .append("\t NULL");
+            if (i != ts.length - 1) {
+                builder.append(",\n");
+            }
+        }
+        builder.append(");");
+        return builder.toString();
+    }
+
+    private static String generalInsert(List<String> list) {
+        String[] datas;
+        StringBuilder builder = new StringBuilder(list.size() * 32);
+        builder.append("insert into ")
+                .append(tableName)
+                .append(" values");
+        for (int i = 0; i < list.size(); i++) {
+            builder.append('(');
+            datas = list.get(i).split("\\|");
+            for (int j = 1; j < datas.length; j++) {
+                if ("int".equals(typeList.get(j))) {
+                    builder.append(datas[j].trim());
+                } else {
+                    builder.append('\'')
+                            .append(datas[j].trim())
+                            .append('\'');
+                }
+                if (j != datas.length - 1) {
+                    builder.append(',');
+                }
+            }
+            builder.append(')');
+            if (i != list.size() - 1) {
+                builder.append(',');
+            }
+        }
+        builder.append(';');
+        return builder.toString();
+    }
+
+    private static void printGuide() {
+        System.out.println("input guide");
+        System.out.println("1st line is table name");
+        System.out.println("data string on leetcode");
+        System.out.println("example:");
+
+        System.out.println("Employee");
+        System.out.println("+----+-------+--------+--------------+");
+        System.out.println("| Id | Name  | Salary | DepartmentId |");
+        System.out.println("+----+-------+--------+--------------+");
+        System.out.println("| 1  | Joe   | 70000  | 1            |");
+        System.out.println("| 2  | Henry | 80000  | 2            |");
+        System.out.println("| 3  | Sam   | 60000  | 2            |");
+        System.out.println("| 4  | Max   | 90000  | 1            |");
+        System.out.println("| 5  | Janet | 69000  | 1            |");
+        System.out.println("| 6  | Randy | 85000  | 1            |");
+        System.out.println("+----+-------+--------+--------------+");
+    }
+
+    public static void main(String[] args) {
+//        printGuide();
+
+        List<String> list = new ArrayList<>();
+        String title;
+        Scanner scanner = new Scanner(System.in);
+        tableName = scanner.nextLine();
+        scanner.nextLine();
+        title = scanner.nextLine();
+        scanner.nextLine();
+        String s = scanner.nextLine();
+        while (s.charAt(0) != '+') {
+            list.add(s);
+            s = scanner.nextLine();
+        }
+
+        System.out.println(generalDDL(title, list.get(0)));
+        System.out.println(generalInsert(list));
+    }
+}
